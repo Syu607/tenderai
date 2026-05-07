@@ -2,7 +2,3 @@ venv/
 __pycache__/
 *.pyc
 .env
-backend/uploads/
-backend/tenderai.db
-reports/
-README.docx

@@ -6,6 +6,9 @@ Live Demo: http://3.108.40.103/
 
 ## Table of Contents
 
+- [How to Use the Live Prototype (AWS Link)](#how-to-use-the-live-prototype-aws-link)
+- [Instructions to Run Locally (Local Sandbox)](#instructions-to-run-locally-local-sandbox)
+- [Key Technical Features](#key-technical-features)
 - [What Is TenderAI?](#what-is-tenderai)
 - [Project Structure](#project-structure)
 - [Tech Stack](#tech-stack)
@@ -19,6 +22,102 @@ Live Demo: http://3.108.40.103/
 - [Troubleshooting](#troubleshooting)
 - [Test Data (Quick Demo)](#test-data-quick-demo)
 - [Contact / Credits](#contact--credits)
+
+## How to Use the Live Prototype (AWS Link)
+
+You can access the functional dashboard directly at:
+
+- http://3.108.40.103/
+
+Step 1 — Create a Tender:
+
+- Click "+ New Tender" in the sidebar.
+- Fill in the reference (e.g., `CRPF-2026-TEST`), organization, and thresholds (Min Turnover in ₹ Cr, EMD, etc.).
+- Optionally upload a Tender PDF to see the AI extract criteria.
+
+Step 2 — Register Bidders:
+
+- Select your tender and click "Add Bidder".
+- Enter mock financial data (Turnover, GSTIN, PAN) and list supporting documents.
+
+Step 3 — Run Evaluation:
+
+- Click "Evaluate".
+- The system will compare bidder data against the tender requirements, assigning a status of Eligible, Ineligible, or Review Required.
+
+Step 4 — Verify Audit Trail:
+
+- Click the "Audit" tab to see the immutable SHA-256 event chain.
+- Click "Verify Chain" to confirm that no data has been tampered with.
+
+Step 5 — Export Report:
+
+- Click "Download Report" to generate a professionally formatted DOCX evaluation sheet.
+
+## Instructions to Run Locally (Local Sandbox)
+
+If you have the source code (zip file) and want to run a local instance of the same system, follow these steps.
+
+Prerequisites:
+
+- Python: 3.10 or higher
+- OS: Windows (CMD/PowerShell) or Linux/macOS
+
+Step-by-Step Setup:
+
+Extract and Navigate:
+
+```bash
+unzip tenderai.zip
+cd tenderai
+```
+
+Create Virtual Environment:
+
+```text
+Windows:
+  python -m venv venv
+  venv\Scripts\activate
+
+Linux/macOS:
+  python3 -m venv venv
+  source venv/bin/activate
+```
+
+Install Dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Create Required Folders:
+
+```bash
+# Linux/macOS
+mkdir -p backend/uploads/tenders backend/uploads/bidders reports
+
+# Windows
+mkdir backend\uploads\tenders
+mkdir backend\uploads\bidders
+mkdir reports
+```
+
+Run the Application:
+
+```bash
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+```
+
+Access:
+
+- Frontend: http://localhost:8000
+- API Documentation: http://localhost:8000/docs
+
+## Key Technical Features
+
+- Immutable Audit Trail: Uses SHA-256 hashing to link every event (Tender Create → Bidder Add → Evaluate), preventing administrative tampering.
+- Grounded Verification: Includes a fallback GSTIN/PAN validator that follows official 15-character Indian tax formats.
+- Confidence Scoring: Automatically flags bidders for manual review if data is extracted from low-quality scans or is borderline against thresholds.
 
 ## What Is TenderAI?
 
@@ -456,7 +555,7 @@ Bidder 2 (Should fail — low turnover):
 
 Built for the AI for Government Procurement Hackathon.
 
-- Author: Revanth Agastya (revanthagastya373@gmail.com)
+- Author: Inova (mohammedsulaiman.scs25@bmsce.ac.in & revantl.scs25@bmsce.ac.in)
 - Live Deployment: http://3.108.40.103/
 
 This system is designed to assist procurement officers — all final decisions remain with authorized human personnel per GFR 2017 and CVC guidelines.
