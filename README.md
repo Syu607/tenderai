@@ -555,7 +555,7 @@ Bidder 2 (Should fail — low turnover):
 
 Built for the AI for Government Procurement Hackathon.
 
-- Author: Inova (mohammedsulaiman.scs25@bmsce.ac.in & revantl.scs25@bmsce.ac.in)
+- Author: Inova (mohammedsulaiman.scs25@bmsce.ac.in & revanthl.scs25@bmsce.ac.in)
 - Live Deployment: http://3.108.40.103/
 
 This system is designed to assist procurement officers — all final decisions remain with authorized human personnel per GFR 2017 and CVC guidelines.
