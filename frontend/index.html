@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TenderAI — Government Tender Evaluation System</title>
+<style>
+:root{
+  --bg:#0A0D13;--surface:#111520;--surface2:#181E2E;--surface3:#1F2840;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+  --text:#DDE3F0;--text2:#7A86A0;--text3:#3E4A62;
+  --accent:#4C7EF7;--accent2:#7C6AF5;
+  --green:#2ECC7A;--green-bg:rgba(46,204,122,0.1);--green-bd:rgba(46,204,122,0.25);
+  --red:#E85555;--red-bg:rgba(232,85,85,0.1);--red-bd:rgba(232,85,85,0.25);
+  --amber:#F0A030;--amber-bg:rgba(240,160,48,0.1);--amber-bd:rgba(240,160,48,0.25);
+  --blue-bg:rgba(76,126,247,0.1);--blue-bd:rgba(76,126,247,0.25);
+  --r:10px;--rsm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;overflow-x:hidden;}
+input,textarea,select{font-family:inherit;font-size:13px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:var(--rsm);padding:8px 12px;width:100%;outline:none;transition:border .15s;}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);}
+textarea{resize:vertical;min-height:80px;}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* HEADER */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:56px;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:200;}
+.logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;}
+.logo-sq{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;}
+.hdr-badge{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.api-status{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid;}
+.api-ok{background:var(--green-bg);color:var(--green);border-color:var(--green-bd);}
+.api-err{background:var(--red-bg);color:var(--red);border-color:var(--red-bd);}
+.nav{display:flex;gap:2px;margin-left:auto;}
+.nt{padding:6px 14px;border-radius:var(--rsm);font-size:13px;color:var(--text2);background:none;border:1px solid transparent;transition:all .15s;}
+.nt:hover{background:var(--surface2);color:var(--text);}
+.nt.on{background:var(--surface2);color:var(--text);font-weight:500;border-color:var(--border2);}
+
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 56px);}
+.sidebar{width:270px;min-width:270px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:1rem 0;}
+.main{flex:1;overflow-y:auto;padding:1.75rem;}
+
+/* SIDEBAR */
+.sb-sec{padding:0 .875rem 1rem;}
+.sb-lbl{font-size:10px;font-weight:700;letter-spacing:.09em;color:var(--text3);text-transform:uppercase;padding:0 .25rem .5rem;display:flex;align-items:center;justify-content:space-between;}
+.sb-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--rsm);padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.sb-btn:hover{opacity:.85;}
+
+.ti{border:1px solid var(--border);border-radius:var(--r);padding:.875rem;margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.ti:hover{border-color:var(--border2);background:var(--surface2);}
+.ti.on{border-color:var(--accent);background:var(--blue-bg);}
+.ti-ref{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
+.ti-name{font-size:12px;font-weight:600;margin:3px 0;}
+.ti-meta{font-size:10px;color:var(--text2);}
+
+.bi-row{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--rsm);cursor:pointer;transition:all .15s;margin-bottom:2px;}
+.bi-row:hover{background:var(--surface2);}
+.bi-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.bi-nm{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bi-sub{font-size:10px;color:var(--text2);}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:1.25rem;}
+.ch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.125rem;}
+.ct{font-size:14px;font-weight:600;}
+.cs{font-size:12px;color:var(--text2);margin-top:3px;}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem;}
+.sc{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.125rem;}
+.sc-l{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;}
+.sc-v{font-size:24px;font-weight:800;margin-top:5px;line-height:1;}
+.sc-n{font-size:11px;color:var(--text3);margin-top:4px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.divider{height:1px;background:var(--border);margin:1.25rem 0;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.b-elig{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.b-inelig{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);}
+.b-rev{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd);}
+.b-miss{background:var(--blue-bg);color:var(--accent);border:1px solid var(--blue-bd);}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:var(--rsm);font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:8px;cursor:pointer;}
+.btn-p{background:var(--accent);color:#fff;border:none;}
+.btn-p:hover{opacity:.88;}
+.btn-s{background:var(--surface2);color:var(--text);border:1px solid var(--border2);}
+.btn-s:hover{border-color:var(--accent);color:var(--accent);}
+.btn-d{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);}
+.btn-d:hover{background:var(--red);color:#fff;}
+.btn-g{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd);}
+.btn-g:hover{background:var(--green);color:#fff;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.run-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:10px 24px;border-radius:var(--rsm);font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:10px;}
+.run-btn:hover{opacity:.88;}
+.run-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* FORM */
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.fr.full{grid-template-columns:1fr;}
+.fg{display:flex;flex-direction:column;gap:6px;}
+.fl{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;}
+.fh{font-size:10px;color:var(--text3);}
+.req{color:var(--red);}
+
+/* PAGES */
+.page{display:none;}.page.on{display:block;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:none;align-items:center;justify-content:center;overflow-y:auto;padding:2rem;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.75rem;width:640px;max-width:95vw;max-height:90vh;overflow-y:auto;}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;}
+.mt{font-size:16px;font-weight:700;}
+.mx{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px;}
+.mx:hover{color:var(--text);}
+.mf{display:flex;gap:10px;justify-content:flex-end;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:2rem;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:.5rem;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(76,126,247,.04);}
+.upload-zone input[type=file]{display:none;}
+.upload-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.upload-file-chip{background:var(--surface3);border:1px solid var(--border2);border-radius:var(--rsm);padding:4px 10px;font-size:11px;display:flex;align-items:center;gap:6px;}
+.upload-file-chip button{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0;line-height:1;}
+.upload-file-chip button:hover{color:var(--red);}
+
+/* CRITERION ROW */
+.cr-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .15s;margin-bottom:7px;}
+.cr-row:hover{border-color:var(--border2);}
+.cr-hdr{display:flex;align-items:center;gap:10px;}
+.cr-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.cr-title{flex:1;font-size:13px;font-weight:500;}
+.cr-cat{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.05em;}
+.cat-fin{background:rgba(76,126,247,.12);color:var(--accent);}
+.cat-exp{background:rgba(124,106,245,.12);color:#9B8FFC;}
+.cat-com{background:rgba(240,160,48,.12);color:var(--amber);}
+.cat-leg{background:rgba(232,85,85,.12);color:var(--red);}
+.cr-body{margin-top:11px;padding-top:11px;border-top:1px solid var(--border);display:none;}
+.cr-body.show{display:block;}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.di label{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;}
+.di .v{font-size:13px;}
+.cbar{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:5px;}
+.cbar-f{height:100%;border-radius:2px;transition:width .4s;}
+.rbox{background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 12px;font-size:12px;color:var(--text2);line-height:1.75;margin-top:8px;}
+
+/* LEADERBOARD */
+.lb-row{display:flex;align-items:center;gap:14px;padding:13px 16px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);margin-bottom:8px;cursor:pointer;transition:all .15s;}
+.lb-row:hover{border-color:var(--border2);}
+.lb-rank{font-size:20px;font-weight:800;min-width:30px;color:var(--text3);}
+.lb-rank.gold{color:var(--amber);}
+.lb-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+.lb-info{flex:1;min-width:0;}
+.lb-cn{font-size:13px;font-weight:600;}
+.lb-id{font-size:10px;color:var(--text2);margin-top:2px;}
+.lb-bars{width:150px;display:flex;flex-direction:column;gap:5px;}
+.bar-row{display:flex;align-items:center;gap:6px;}
+.bar-lbl{font-size:9px;color:var(--text3);width:52px;text-align:right;}
+.bar-track{flex:1;height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:2px;}
+.lb-pct{font-size:13px;font-weight:700;min-width:42px;text-align:right;}
+
+/* AUDIT */
+.audit-tl{position:relative;padding-left:22px;}
+.audit-tl::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:1px;background:var(--border);}
+.ae{position:relative;margin-bottom:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;}
+.ae::before{content:'';position:absolute;left:-18px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--border2);border:2px solid var(--bg);}
+.ae.ok::before{background:var(--green);}
+.ae.err::before{background:var(--red);}
+.ae.inf::before{background:var(--accent);}
+.ae-type{font-size:10px;font-weight:700;color:var(--text2);}
+.ae-desc{font-size:13px;font-weight:500;margin:3px 0;}
+.ae-hash{font-family:monospace;font-size:9px;color:var(--text3);margin-top:4px;word-break:break-all;}
+
+/* MISC */
+.chip{display:inline-block;padding:2px 8px;background:var(--surface3);border-radius:4px;font-size:11px;color:var(--text2);margin:2px;}
+.chip-g{background:var(--green-bg);color:var(--green);}
+.chip-r{background:var(--red-bg);color:var(--red);}
+.empty{text-align:center;padding:3rem 2rem;color:var(--text2);}
+.empty .ei{font-size:48px;margin-bottom:1rem;}
+.alert{padding:12px 14px;border-radius:var(--rsm);font-size:13px;margin-bottom:1rem;}
+.al-i{background:var(--blue-bg);border:1px solid var(--blue-bd);color:var(--accent);}
+.al-s{background:var(--green-bg);border:1px solid var(--green-bd);color:var(--green);}
+.al-e{background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red);}
+.al-w{background:var(--amber-bg);border:1px solid var(--amber-bd);color:var(--amber);}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress-track{height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-top:8px;}
+.progress-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .5s ease;}
+.notice{font-size:11px;color:var(--text2);padding:8px 12px;background:var(--surface2);border-radius:var(--rsm);border:1px solid var(--border);}
+.tab-bar{display:flex;gap:3px;margin-bottom:1.75rem;border-bottom:1px solid var(--border);padding-bottom:.75rem;}
+.tab{padding:7px 16px;border-radius:var(--rsm);font-size:13px;color:var(--text2);background:none;border:1px solid transparent;transition:all .15s;cursor:pointer;}
+.tab:hover{background:var(--surface);color:var(--text);}
+.tab.on{background:var(--surface);color:var(--text);font-weight:500;border-color:var(--border2);}
+</style>
+</head>
+<body>
+
+<!-- API CONFIG -->
+<script>
+  // Change this to your deployed backend URL in production
+  const API = 'http://127.0.0.1:8000';
+</script>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">
+    <div class="logo-sq">⚖</div>
+    TenderAI
+    <span style="font-size:11px;color:var(--text3);font-weight:400">v2.0</span>
+  </div>
+  <div class="hdr-badge">● Live</div>
+  <span id="api-badge" class="api-status api-err">API Connecting...</span>
+  <div class="nav">
+    <button class="nt on" onclick="nav('dashboard')">Dashboard</button>
+    <button class="nt" onclick="nav('tenders')">Tenders</button>
+    <button class="nt" onclick="nav('bidders')">Bidders</button>
+    <button class="nt" onclick="nav('evaluate')">Evaluate</button>
+    <button class="nt" onclick="nav('reports')">Reports</button>
+    <button class="nt" onclick="nav('audit')">Audit Log</button>
+  </div>
+</div>
+
+<!-- ADD TENDER MODAL -->
+<div class="modal-bg" id="modal-tender">
+<div class="modal">
+  <div class="mh"><div class="mt">➕ Add New Tender</div><button class="mx" onclick="closeModal('tender')">✕</button></div>
+  <div class="fr">
+    <div class="fg"><span class="fl">Tender Reference <span class="req">*</span></span>
+      <input id="t-ref" placeholder="e.g. CRPF/PROV/OTE/2024/537"></div>
+    <div class="fg"><span class="fl">Estimated Value (₹ Crore) <span class="req">*</span></span>
+      <input id="t-val" type="number" placeholder="e.g. 8"></div>
+  </div>
+  <div class="fr full"><div class="fg"><span class="fl">Tender Name <span class="req">*</span></span>
+    <input id="t-name" placeholder="e.g. Supply of Fusion Monoculars (Thermal + NVG)"></div></div>
+  <div class="fr">
+    <div class="fg"><span class="fl">Organisation <span class="req">*</span></span>
+      <input id="t-org" placeholder="e.g. CRPF / MHA / DRDO"></div>
+    <div class="fg"><span class="fl">Min Turnover Required (₹ Cr) <span class="req">*</span></span>
+      <input id="t-turnover" type="number" placeholder="e.g. 5"></div>
+  </div>
+  <div class="fr">
+    <div class="fg"><span class="fl">Min Similar Projects <span class="req">*</span></span>
+      <input id="t-projects" type="number" value="3"></div>
+    <div class="fg"><span class="fl">EMD Amount (₹)</span>
+      <input id="t-emd" type="number" placeholder="e.g. 200000"></div>
+  </div>
+  <div class="fr">
+    <div class="fg"><span class="fl">Procurement Type</span>
+      <select id="t-type">
+        <option>Open Tender Enquiry (OTE)</option>
+        <option>Limited Tender Enquiry (LTE)</option>
+        <option>Single Tender Enquiry (STE)</option>
+        <option>Request for Proposal (RFP)</option>
+        <option>Request for Quotation (RFQ)</option>
+      </select></div>
+    <div class="fg"><span class="fl">Deadline</span>
+      <input id="t-deadline" type="date"></div>
+  </div>
+  <div class="fr full"><div class="fg">
+    <span class="fl">Upload Tender PDF / DOCX (optional)</span>
+    <div class="upload-zone" id="tender-upload-zone" onclick="document.getElementById('tender-file').click()">
+      <input type="file" id="tender-file" accept=".pdf,.docx,.doc,.txt" onchange="handleTenderFile(this)">
+      <div style="font-size:28px;margin-bottom:8px">📄</div>
+      <div style="font-size:13px;font-weight:500">Click to upload tender document</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">PDF, DOCX, TXT — AI will extract eligibility criteria automatically</div>
+    </div>
+    <div id="tender-file-name" style="font-size:11px;color:var(--green)"></div>
+  </div></div>
+  <div class="fr full"><div class="fg">
+    <span class="fl">Tender Description / Eligibility Criteria Text</span>
+    <textarea id="t-desc" rows="5" placeholder="Paste Section 3 (Eligibility Criteria) text here — AI will auto-extract criteria. Or upload the document above."></textarea>
+    <span class="fh">AI extracts: financial thresholds, experience rules, compliance docs, legal requirements.</span>
+  </div></div>
+  <div class="mf">
+    <button class="btn btn-s" onclick="closeModal('tender')">Cancel</button>
+    <button class="btn btn-p" id="save-tender-btn" onclick="saveTender()">💾 Save Tender</button>
+  </div>
+</div>
+</div>
+
+<!-- ADD BIDDER MODAL -->
+<div class="modal-bg" id="modal-bidder">
+<div class="modal" style="width:680px">
+  <div class="mh"><div class="mt">➕ Add Bidder Submission</div><button class="mx" onclick="closeModal('bidder')">✕</button></div>
+  <div class="fr">
+    <div class="fg"><span class="fl">Company Name <span class="req">*</span></span>
+      <input id="b-company" placeholder="e.g. Techvision Defence Systems Pvt. Ltd."></div>
+    <div class="fg"><span class="fl">Assign to Tender <span class="req">*</span></span>
+      <select id="b-tender-sel"></select></div>
+  </div>
+  <div class="fr">
+    <div class="fg"><span class="fl">GSTIN <span class="req">*</span></span>
+      <input id="b-gstin" placeholder="e.g. 27AABCT3518Q1ZO" maxlength="15" oninput="validateGSTIN(this)">
+      <span class="fh" id="gstin-hint"></span></div>
+    <div class="fg"><span class="fl">PAN Number <span class="req">*</span></span>
+      <input id="b-pan" placeholder="e.g. AABCT3518Q" maxlength="10"></div>
+  </div>
+  <div class="fr">
+    <div class="fg"><span class="fl">CIN (if company)</span>
+      <input id="b-cin" placeholder="e.g. U74999MH2010PTC203456"></div>
+    <div class="fg"><span class="fl">State</span>
+      <select id="b-state">
+        <option value="">Select State</option>
+        <option>Andhra Pradesh</option><option>Delhi</option><option>Gujarat</option>
+        <option>Haryana</option><option>Karnataka</option><option>Kerala</option>
+        <option>Madhya Pradesh</option><option>Maharashtra</option><option>Punjab</option>
+        <option>Rajasthan</option><option>Tamil Nadu</option><option>Telangana</option>
+        <option>Uttar Pradesh</option><option>West Bengal</option>
+      </select></div>
+  </div>
+  <div class="fr">
+    <div class="fg"><span class="fl">Net Worth (₹ Crore)</span>
+      <input id="b-nw" type="number" placeholder="e.g. 12" step="0.01"></div>
+    <div class="fg"><span class="fl">Similar Projects Completed</span>
+      <input id="b-proj" type="number" placeholder="e.g. 3" min="0"></div>
+  </div>
+  <div style="margin-bottom:1rem">
+    <div class="fl" style="margin-bottom:.5rem">Annual Turnovers (₹ Crore)</div>
+    <div class="fr" style="margin-bottom:0">
+      <div class="fg"><span class="fh">FY 2021-22</span>
+        <input id="b-t1" type="number" placeholder="e.g. 6.5" step="0.01"></div>
+      <div class="fg"><span class="fh">FY 2022-23</span>
+        <input id="b-t2" type="number" placeholder="e.g. 7.2" step="0.01"></div>
+    </div>
+    <div style="margin-top:.5rem">
+      <div class="fg"><span class="fh">FY 2023-24</span>
+        <input id="b-t3" type="number" placeholder="e.g. 8.1" step="0.01"></div>
+    </div>
+  </div>
+  <div class="fr full"><div class="fg">
+    <span class="fl">Experience Description</span>
+    <textarea id="b-exp" rows="3" placeholder="Project 1: Supply of NVDs to Indian Army, Rs. 2.5 Cr, completed 15-Mar-2022&#10;Project 2: Thermal imaging for BSF, Rs. 3.1 Cr, completed 20-Jun-2023"></textarea>
+  </div></div>
+  <div class="fr full"><div class="fg">
+    <span class="fl">Documents Submitted (comma-separated)</span>
+    <input id="b-docs" placeholder="e.g. GSTIN Certificate, PAN Card, ISO 9001:2015, NSIC Registration, Integrity Pact">
+    <span class="fh">List all documents enclosed in the technical bid envelope</span>
+  </div></div>
+
+  <!-- DOCUMENT UPLOAD -->
+  <div class="fr full"><div class="fg">
+    <span class="fl">Upload Bidder Documents (PDF/DOCX/TXT)</span>
+    <div class="upload-zone" id="bidder-upload-zone"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleBidderDrop(event)"
+      onclick="document.getElementById('bidder-files').click()">
+      <input type="file" id="bidder-files" multiple accept=".pdf,.docx,.doc,.txt"
+        onchange="handleBidderFiles(this.files)">
+      <div style="font-size:28px;margin-bottom:8px">📎</div>
+      <div style="font-size:13px;font-weight:500">Click or drag &amp; drop bidder documents</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px">Balance Sheets, GSTIN Certificate, Experience Certificates, etc.</div>
+      <div style="font-size:11px;color:var(--text2)">AI will read these to auto-extract compliance information</div>
+    </div>
+    <div class="upload-files" id="bidder-file-list"></div>
+  </div></div>
+
+  <div class="mf">
+    <button class="btn btn-s" onclick="closeModal('bidder')">Cancel</button>
+    <button class="btn btn-p" id="save-bidder-btn" onclick="saveBidder()">💾 Save Bidder</button>
+  </div>
+</div>
+</div>
+
+<!-- VIEW TENDER MODAL -->
+<div class="modal-bg" id="modal-view-tender">
+<div class="modal" style="width:720px">
+  <div class="mh"><div class="mt" id="vt-title">Tender Details</div><button class="mx" onclick="closeModal('view-tender')">✕</button></div>
+  <div id="vt-content"></div>
+  <div class="mf"><button class="btn btn-s" onclick="closeModal('view-tender')">Close</button></div>
+</div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+  <div class="sidebar">
+    <div class="sb-sec">
+      <div class="sb-lbl">Tenders<button class="sb-btn" onclick="openModal('tender')">+ New</button></div>
+      <div id="sb-tenders"><div style="font-size:11px;color:var(--text3);padding:.5rem">No tenders yet</div></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Bidders<button class="sb-btn" onclick="openModal('bidder')">+ Add</button></div>
+      <div id="sb-bidders"><div style="font-size:11px;color:var(--text3);padding:.5rem">Select a tender</div></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-lbl">Quick Actions</div>
+      <button class="btn btn-s btn-sm" style="width:100%;margin-bottom:6px;justify-content:flex-start" onclick="nav('evaluate')">⚙ Run Evaluation</button>
+      <button class="btn btn-s btn-sm" style="width:100%;margin-bottom:6px;justify-content:flex-start" onclick="nav('reports')">📄 Download Report</button>
+      <button class="btn btn-s btn-sm" style="width:100%;justify-content:flex-start" onclick="loadDemo()">🎯 Load Demo Data</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div id="page-dashboard" class="page on"><div id="dash"></div></div>
+    <div id="page-tenders"   class="page"><div id="tenders-content"></div></div>
+    <div id="page-bidders"   class="page"><div id="bidders-content"></div></div>
+    <div id="page-evaluate"  class="page"><div id="eval-content"></div></div>
+    <div id="page-reports"   class="page"><div id="reports-content"></div></div>
+    <div id="page-audit"     class="page"><div id="audit-content"></div></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let tenders    = [];
+let bidders    = {};        // tenderId → [bidder]
+let evals      = {};        // tenderId → [evalResult]
+let activeTId  = null;
+let bidderFiles= [];        // files pending upload for new bidder
+let tenderFile = null;      // file pending for new tender
+let expandedCr = new Set();
+
+const COLORS = ['#4C7EF7','#2ECC7A','#F0A030','#E85555','#9B8FFC'];
+const avColor = i => COLORS[i % COLORS.length];
+const initials = n => (n||'??').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+
+// ═══════════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════════
+async function api(method, path, body=null, isForm=false) {
+  const opts = { method, headers: {} };
+  if (body) {
+    if (isForm) { opts.body = body; }
+    else { opts.headers['Content-Type']='application/json'; opts.body=JSON.stringify(body); }
+  }
+  const r = await fetch(API + path, opts);
+  if (!r.ok) {
+    const err = await r.json().catch(()=>({detail: r.statusText}));
+    throw new Error(err.detail || r.statusText);
+  }
+  // For file downloads return blob
+  const ct = r.headers.get('content-type') || '';
+  if (ct.includes('application/vnd.openxmlformats')) return r;
+  return r.json();
+}
+
+async function checkAPI() {
+  try {
+    await api('GET', '/api/health');
+    document.getElementById('api-badge').className = 'api-status api-ok';
+    document.getElementById('api-badge').textContent = '● API Connected';
+  } catch {
+    document.getElementById('api-badge').className = 'api-status api-err';
+    document.getElementById('api-badge').textContent = '✗ API Offline — start backend';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// DATA LOADING
+// ═══════════════════════════════════════════════════════════
+async function loadAll() {
+  try {
+    tenders = await api('GET', '/api/tenders');
+    for (const t of tenders) {
+      bidders[t.id] = await api('GET', `/api/tenders/${t.id}/bidders`);
+      const ev = await api('GET', `/api/tenders/${t.id}/evaluation`);
+      if (ev && ev.length) evals[t.id] = ev;
+    }
+    renderSidebar();
+    renderCurrentPage();
+  } catch(e) {
+    showToast('⚠ Could not load data — is the backend running?', 'warn');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function nav(pg) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nt').forEach(b=>b.classList.remove('on'));
+  document.getElementById('page-'+pg).classList.add('on');
+  document.querySelectorAll('.nt').forEach(b=>{
+    if(b.textContent.trim().toLowerCase()===pg.toLowerCase()) b.classList.add('on');
+  });
+  renderPage(pg);
+}
+
+function renderCurrentPage() {
+  const active = document.querySelector('.page.on');
+  if(!active) return;
+  const pg = active.id.replace('page-','');
+  renderPage(pg);
+}
+
+function renderPage(pg) {
+  const fn = {
+    dashboard: renderDashboard,
+    tenders:   renderTendersPage,
+    bidders:   renderBiddersPage,
+    evaluate:  renderEvaluatePage,
+    reports:   renderReportsPage,
+    audit:     renderAuditPage,
+  };
+  if(fn[pg]) fn[pg]();
+}
+
+// ═══════════════════════════════════════════════════════════
+// BADGES & HELPERS
+// ═══════════════════════════════════════════════════════════
+function badge(s) {
+  const m = {
+    eligible:'<span class="badge b-elig">✓ Eligible</span>',
+    ineligible:'<span class="badge b-inelig">✗ Ineligible</span>',
+    review_required:'<span class="badge b-rev">⚑ Review</span>',
+    document_missing:'<span class="badge b-miss">□ Missing</span>',
+  };
+  return m[s] || `<span class="badge b-rev">${s}</span>`;
+}
+
+function confColor(c) {
+  return c>=.90?'var(--green)':c>=.75?'var(--amber)':'var(--red)';
+}
+
+function catClass(cat) {
+  return {financial:'cat-fin',experience:'cat-exp',compliance:'cat-com',legal:'cat-leg'}[cat]||'cat-com';
+}
+
+function statusIcon(s) {
+  return {eligible:'✓',ineligible:'✗',review_required:'⚑',document_missing:'□'}[s]||'?';
+}
+function statusIconBg(s) {
+  return {eligible:'var(--green-bg)',ineligible:'var(--red-bg)',review_required:'var(--amber-bg)',document_missing:'var(--blue-bg)'}[s]||'var(--surface3)';
+}
+function statusIconColor(s) {
+  return {eligible:'var(--green)',ineligible:'var(--red)',review_required:'var(--amber)',document_missing:'var(--accent)'}[s]||'var(--text2)';
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════════════
+function openModal(name) {
+  if(name==='bidder') {
+    const sel=document.getElementById('b-tender-sel');
+    sel.innerHTML=tenders.map(t=>`<option value="${t.id}">${t.ref} — ${t.name.slice(0,40)}</option>`).join('');
+    if(activeTId) sel.value=activeTId;
+    bidderFiles=[];
+    document.getElementById('bidder-file-list').innerHTML='';
+  }
+  document.getElementById('modal-'+name).classList.add('open');
+}
+function closeModal(name) {
+  document.getElementById('modal-'+name).classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════
+// FILE HANDLING
+// ═══════════════════════════════════════════════════════════
+function handleTenderFile(input) {
+  tenderFile = input.files[0];
+  document.getElementById('tender-file-name').textContent =
+    tenderFile ? `✅ ${tenderFile.name}` : '';
+}
+
+function handleBidderFiles(files) {
+  for(const f of files) {
+    if(!bidderFiles.find(x=>x.name===f.name)) bidderFiles.push(f);
+  }
+  renderBidderFileList();
+}
+
+function handleBidderDrop(e) {
+  e.preventDefault();
+  document.getElementById('bidder-upload-zone').classList.remove('drag');
+  handleBidderFiles(e.dataTransfer.files);
+}
+
+function removeBidderFile(name) {
+  bidderFiles = bidderFiles.filter(f=>f.name!==name);
+  renderBidderFileList();
+}
+
+function renderBidderFileList() {
+  const el = document.getElementById('bidder-file-list');
+  el.innerHTML = bidderFiles.map(f=>`
+    <div class="upload-file-chip">
+      📄 ${f.name}
+      <button onclick="removeBidderFile('${f.name}')">✕</button>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// GSTIN VALIDATION
+// ═══════════════════════════════════════════════════════════
+function validateGSTIN(input) {
+  const v = input.value.toUpperCase().trim();
+  input.value = v;
+  const hint = document.getElementById('gstin-hint');
+  if(!v) { hint.textContent=''; return; }
+  const valid = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z\d]Z[A-Z\d]$/.test(v);
+  if(v.length<15) {
+    hint.textContent=`${15-v.length} characters remaining`;
+    hint.style.color='var(--text3)';
+  } else {
+    hint.textContent = valid ? '✅ Valid GSTIN format' : '❌ Invalid GSTIN format';
+    hint.style.color = valid ? 'var(--green)' : 'var(--red)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SAVE TENDER
+// ═══════════════════════════════════════════════════════════
+async function saveTender() {
+  const ref  = document.getElementById('t-ref').value.trim();
+  const name = document.getElementById('t-name').value.trim();
+  const org  = document.getElementById('t-org').value.trim();
+  if(!ref||!name||!org) { showToast('Fill required fields (Ref, Name, Organisation)','error'); return; }
+
+  const btn = document.getElementById('save-tender-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Saving...';
+
+  const fd = new FormData();
+  fd.append('ref', ref);
+  fd.append('name', name);
+  fd.append('org', org);
+  fd.append('value', document.getElementById('t-val').value||0);
+  fd.append('min_turnover', document.getElementById('t-turnover').value||5);
+  fd.append('min_projects', document.getElementById('t-projects').value||3);
+  fd.append('emd', document.getElementById('t-emd').value||0);
+  fd.append('description', document.getElementById('t-desc').value);
+  fd.append('proc_type', document.getElementById('t-type').value);
+  fd.append('deadline', document.getElementById('t-deadline').value);
+  if(tenderFile) fd.append('file', tenderFile);
+
+  try {
+    const t = await api('POST', '/api/tenders', fd, true);
+    tenders.unshift(t);
+    bidders[t.id]=[];
+    activeTId=t.id;
+    closeModal('tender');
+    clearTenderForm();
+    renderSidebar(); renderDashboard();
+    showToast('✅ Tender created successfully');
+  } catch(e) {
+    showToast('Error: '+e.message, 'error');
+  } finally {
+    btn.disabled=false; btn.innerHTML='💾 Save Tender';
+  }
+}
+
+function clearTenderForm() {
+  ['t-ref','t-name','t-org','t-val','t-turnover','t-projects','t-emd','t-desc','t-deadline'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('t-projects').value='3';
+  document.getElementById('tender-file-name').textContent='';
+  tenderFile=null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SAVE BIDDER
+// ═══════════════════════════════════════════════════════════
+async function saveBidder() {
+  const company = document.getElementById('b-company').value.trim();
+  const gstin   = document.getElementById('b-gstin').value.trim().toUpperCase();
+  const pan     = document.getElementById('b-pan').value.trim().toUpperCase();
+  const tid     = document.getElementById('b-tender-sel').value;
+
+  if(!company||!gstin||!pan||!tid) {
+    showToast('Fill required fields (Company, GSTIN, PAN, Tender)','error'); return;
+  }
+
+  const btn = document.getElementById('save-bidder-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Uploading...';
+
+  const fd = new FormData();
+  fd.append('company',  company);
+  fd.append('gstin',    gstin);
+  fd.append('pan',      pan);
+  fd.append('cin',      document.getElementById('b-cin').value);
+  fd.append('state',    document.getElementById('b-state').value);
+  fd.append('net_worth',document.getElementById('b-nw').value);
+  fd.append('t_21_22',  document.getElementById('b-t1').value);
+  fd.append('t_22_23',  document.getElementById('b-t2').value);
+  fd.append('t_23_24',  document.getElementById('b-t3').value);
+  fd.append('projects', document.getElementById('b-proj').value||0);
+  fd.append('exp_text', document.getElementById('b-exp').value);
+  fd.append('docs_list',document.getElementById('b-docs').value);
+  for(const f of bidderFiles) fd.append('files', f);
+
+  try {
+    const b = await api('POST', `/api/tenders/${tid}/bidders`, fd, true);
+    if(!bidders[tid]) bidders[tid]=[];
+    bidders[tid].push(b);
+    closeModal('bidder');
+    clearBidderForm();
+    renderSidebar(); renderDashboard();
+    showToast('✅ Bidder added — documents uploaded');
+  } catch(e) {
+    showToast('Error: '+e.message,'error');
+  } finally {
+    btn.disabled=false; btn.innerHTML='💾 Save Bidder';
+  }
+}
+
+function clearBidderForm() {
+  ['b-company','b-gstin','b-pan','b-cin','b-nw','b-t1','b-t2','b-t3','b-proj','b-exp','b-docs'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  bidderFiles=[]; document.getElementById('bidder-file-list').innerHTML='';
+  document.getElementById('gstin-hint').textContent='';
+}
+
+// ═══════════════════════════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════════════════════════
+async function deleteTender(tid) {
+  if(!confirm('Delete this tender and all its bidders/evaluations?')) return;
+  try {
+    await api('DELETE', `/api/tenders/${tid}`);
+    tenders = tenders.filter(t=>t.id!==tid);
+    delete bidders[tid]; delete evals[tid];
+    if(activeTId===tid) activeTId=tenders[0]?.id||null;
+    renderSidebar(); renderDashboard(); renderTendersPage();
+    showToast('Tender deleted');
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+async function deleteBidder(bid, tid) {
+  if(!confirm('Remove this bidder?')) return;
+  try {
+    await api('DELETE', `/api/bidders/${bid}`);
+    if(bidders[tid]) bidders[tid]=bidders[tid].filter(b=>b.id!==bid);
+    renderSidebar(); renderBiddersPage();
+    showToast('Bidder removed');
+  } catch(e) { showToast('Error: '+e.message,'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// VIEW TENDER MODAL
+// ═══════════════════════════════════════════════════════════
+function viewTender(tid) {
+  const t = tenders.find(x=>x.id===tid);
+  if(!t) return;
+  document.getElementById('vt-title').textContent=`📋 ${t.ref}`;
+  const bs = bidders[tid]||[];
+  const criteria = Array.isArray(t.criteria)?t.criteria:[];
+  document.getElementById('vt-content').innerHTML=`
+    <div class="grid2" style="margin-bottom:1rem">
+      <div><div class="fl">Tender Name</div><div style="font-size:14px;font-weight:600;margin-top:4px">${t.name}</div></div>
+      <div><div class="fl">Organisation</div><div style="font-size:14px;font-weight:600;margin-top:4px">${t.org}</div></div>
+      <div><div class="fl">Reference</div><div style="font-size:13px;margin-top:4px;color:var(--accent)">${t.ref}</div></div>
+      <div><div class="fl">Type</div><div style="font-size:13px;margin-top:4px">${t.proc_type}</div></div>
+      <div><div class="fl">Estimated Value</div><div style="font-size:13px;margin-top:4px">₹${t.value} Crore</div></div>
+      <div><div class="fl">EMD</div><div style="font-size:13px;margin-top:4px">${t.emd?'₹'+Number(t.emd).toLocaleString():'Not specified'}</div></div>
+      <div><div class="fl">Min. Turnover</div><div style="font-size:13px;margin-top:4px">₹${t.min_turnover} Crore</div></div>
+      <div><div class="fl">Min. Projects</div><div style="font-size:13px;margin-top:4px">${t.min_projects} similar</div></div>
+      <div><div class="fl">Deadline</div><div style="font-size:13px;margin-top:4px">${t.deadline||'Not set'}</div></div>
+      <div><div class="fl">Uploaded Document</div><div style="font-size:13px;margin-top:4px">${t.file_path?'📄 Uploaded':'—'}</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="fl" style="margin-bottom:10px">Extracted Criteria (${criteria.length})</div>
+    ${criteria.length===0?'<div class="notice">No criteria extracted yet</div>':
+      criteria.map(c=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface2);border-radius:var(--rsm);margin-bottom:6px;border:1px solid var(--border)">
+          <span class="cr-cat ${catClass(c.cat)}">${c.cat}</span>
+          <span style="flex:1;font-size:12px">${c.desc}</span>
+          <span class="chip ${c.mandatory?'chip-r':''}">${c.mandatory?'Mandatory':'Optional'}</span>
+        </div>`).join('')}
+    <div class="divider"></div>
+    <div class="fl" style="margin-bottom:8px">Registered Bidders (${bs.length})</div>
+    ${bs.length===0?'<div class="notice">No bidders registered</div>':
+      bs.map((b,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--surface2);border-radius:var(--rsm);margin-bottom:4px">
+          <div style="width:26px;height:26px;border-radius:50%;background:${avColor(i)}22;color:${avColor(i)};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">${initials(b.company)}</div>
+          <span style="font-size:12px;font-weight:500;flex:1">${b.company}</span>
+          <span style="font-size:10px;color:var(--text2)">${b.gstin}</span>
+          ${b.file_paths&&b.file_paths.length?`<span class="chip chip-g">📎 ${b.file_paths.length} doc${b.file_paths.length>1?'s':''}</span>`:''}
+        </div>`).join('')}
+    ${t.description?`<div class="divider"></div><div class="fl" style="margin-bottom:6px">Criteria Text Excerpt</div>
+      <div style="font-size:12px;color:var(--text2);background:var(--surface2);border-radius:var(--rsm);padding:12px;border:1px solid var(--border);white-space:pre-wrap;max-height:200px;overflow-y:auto">${t.description.slice(0,800)}${t.description.length>800?'...':''}</div>`:''}
+  `;
+  openModal('view-tender');
+}
+
+// ═══════════════════════════════════════════════════════════
+// EVALUATION
+// ═══════════════════════════════════════════════════════════
+async function runEval(tid) {
+  const btn = document.getElementById(`run-btn-${tid}`);
+  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Evaluating...'; }
+
+  try {
+    const result = await api('POST', `/api/tenders/${tid}/evaluate`);
+    // Reload evaluations
+    const ev = await api('GET', `/api/tenders/${tid}/evaluation`);
+    evals[tid] = ev;
+    renderEvaluatePage(); renderDashboard(); renderReportsPage();
+    renderSidebar();
+    showToast(`✅ Evaluation complete — ${result.eligible}/${result.total} eligible`);
+  } catch(e) {
+    showToast('Error: '+e.message,'error');
+  } finally {
+    if(btn) { btn.disabled=false; btn.innerHTML='▶ Run Evaluation'; }
+  }
+}
+
+async function downloadReport(tid) {
+  const t = tenders.find(x=>x.id===tid);
+  const btn = document.getElementById(`report-btn-${tid}`);
+  if(btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Generating...'; }
+  try {
+    const resp = await api('GET', `/api/tenders/${tid}/report/docx`);
+    // resp is the raw Response object for file downloads
+    const blob = await resp.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    const safe = (t?.ref||'report').replace(/[\/\\]/g,'-');
+    a.download = `TenderEval_${safe}_${new Date().toISOString().slice(0,10)}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    a.remove();
+    showToast('📄 DOCX report downloaded');
+  } catch(e) {
+    showToast('Error generating report: '+e.message,'error');
+  } finally {
+    if(btn) { btn.disabled=false; btn.innerHTML='📄 Download DOCX Report'; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: SIDEBAR
+// ═══════════════════════════════════════════════════════════
+function renderSidebar() {
+  // Tenders
+  const tel = document.getElementById('sb-tenders');
+  if(!tenders.length) {
+    tel.innerHTML='<div style="font-size:11px;color:var(--text3);padding:.5rem">No tenders — add one above</div>';
+  } else {
+    tel.innerHTML=tenders.map(t=>`
+      <div class="ti ${activeTId===t.id?'on':''}" onclick="setActiveTender('${t.id}')">
+        <div class="ti-ref">${t.ref}</div>
+        <div class="ti-name">${t.name}</div>
+        <div class="ti-meta">${t.org} · ₹${t.value} Cr</div>
+        <div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap">
+          <span class="chip">${(bidders[t.id]||[]).length} bidders</span>
+          ${evals[t.id]?'<span class="chip chip-g">Evaluated</span>':''}
+        </div>
+      </div>`).join('');
+  }
+
+  // Bidders
+  const bel = document.getElementById('sb-bidders');
+  if(!activeTId) {
+    bel.innerHTML='<div style="font-size:11px;color:var(--text3);padding:.5rem">Select a tender first</div>';
+    return;
+  }
+  const bs = bidders[activeTId]||[];
+  const ev = evals[activeTId];
+  if(!bs.length) {
+    bel.innerHTML='<div style="font-size:11px;color:var(--text3);padding:.5rem">No bidders yet</div>';
+    return;
+  }
+  const SC = {eligible:'var(--green)',ineligible:'var(--red)',review_required:'var(--amber)'};
+  bel.innerHTML=bs.map((b,i)=>{
+    const res = ev?.find(r=>r.bidder_id===b.id);
+    return `<div class="bi-row">
+      <div class="bi-av" style="background:${avColor(i)}22;color:${avColor(i)}">${initials(b.company)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="bi-nm">${b.company}</div>
+        <div class="bi-sub">${res?`${res.mand_pass}/${res.mand_total} criteria`:'Not evaluated'}</div>
+      </div>
+      <div class="dot" style="background:${res?SC[res.overall]||'var(--text3)':'var(--text3)'}"></div>
+    </div>`;
+  }).join('');
+}
+
+function setActiveTender(id) {
+  activeTId=id; renderSidebar(); renderDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: DASHBOARD
+// ═══════════════════════════════════════════════════════════
+function renderDashboard() {
+  const el = document.getElementById('dash');
+  if(!tenders.length) {
+    el.innerHTML=`<div class="empty">
+      <div class="ei">⚖</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px">Welcome to TenderAI</div>
+      <div style="margin-bottom:1.5rem;max-width:400px;margin:0 auto 1.5rem">AI-powered government tender evaluation. GFR 2017 & CVC compliant with full audit trail and database persistence.</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="openModal('tender')">➕ Add First Tender</button>
+        <button class="btn btn-s" onclick="loadDemo()">🎯 Load Demo Data</button>
+      </div>
+    </div>`; return;
+  }
+
+  const allEvals = Object.values(evals).flat();
+  const eligible = allEvals.filter(r=>r.overall==='eligible').length;
+  const avgConf  = allEvals.length ? (allEvals.reduce((s,r)=>s+r.confidence,0)/allEvals.length*100).toFixed(0) : '—';
+
+  el.innerHTML=`
+    <div class="sg">
+      <div class="sc"><div class="sc-l">Tenders</div><div class="sc-v" style="color:var(--text)">${tenders.length}</div><div class="sc-n">Active procurement</div></div>
+      <div class="sc"><div class="sc-l">Bidders</div><div class="sc-v" style="color:var(--text)">${Object.values(bidders).flat().length}</div><div class="sc-n">Registered submissions</div></div>
+      <div class="sc"><div class="sc-l">Eligible</div><div class="sc-v" style="color:var(--green)">${eligible}</div><div class="sc-n">Pass all mandatory</div></div>
+      <div class="sc"><div class="sc-l">Avg Confidence</div><div class="sc-v" style="color:var(--accent)">${avgConf==='—'?'—':avgConf+'%'}</div><div class="sc-n">AI evaluation</div></div>
+    </div>
+    ${tenders.map(t=>{
+      const ev = evals[t.id];
+      const bs = bidders[t.id]||[];
+      const sorted = ev ? [...ev].sort((a,b)=>{
+        const r={eligible:0,review_required:1,ineligible:2};
+        return (r[a.overall]||2)-(r[b.overall]||2)||b.confidence-a.confidence;
+      }) : [];
+      return `<div class="card">
+        <div class="ch">
+          <div>
+            <div class="ct">${t.name}</div>
+            <div class="cs">${t.ref} · ${t.org} · ₹${t.value} Cr · Deadline: ${t.deadline||'N/A'}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-s btn-sm" onclick="viewTender('${t.id}')">👁 View</button>
+            ${!ev?`<button class="btn btn-p btn-sm" onclick="nav('evaluate')">⚙ Evaluate</button>`
+                 :`<button class="btn btn-g btn-sm" id="report-btn-${t.id}" onclick="downloadReport('${t.id}')">📄 Download DOCX</button>`}
+          </div>
+        </div>
+        ${!ev?`<div class="alert al-i">⚙ ${bs.length} bidder(s) ready. Run evaluation to see results.</div>`
+             :sorted.map((r,i)=>`
+          <div class="lb-row" onclick="nav('evaluate')">
+            <div class="lb-rank ${i===0?'gold':''}">#${i+1}</div>
+            <div class="lb-av" style="background:${avColor(i)}22;color:${avColor(i)}">${initials(r.company)}</div>
+            <div class="lb-info"><div class="lb-cn">${r.company}</div><div class="lb-id">${r.bidder_id}</div></div>
+            ${badge(r.overall)}
+            <div class="lb-bars">
+              <div class="bar-row"><span class="bar-lbl">Mandatory</span><div class="bar-track"><div class="bar-fill" style="width:${r.mand_total?r.mand_pass/r.mand_total*100:0}%;background:${r.overall==='eligible'?'var(--green)':'var(--red)'}"></div></div></div>
+              <div class="bar-row"><span class="bar-lbl">Confidence</span><div class="bar-track"><div class="bar-fill" style="width:${r.confidence*100}%;background:var(--accent)"></div></div></div>
+            </div>
+            <div class="lb-pct" style="color:${confColor(r.confidence)}">${(r.confidence*100).toFixed(0)}%</div>
+          </div>`).join('')}
+      </div>`;
+    }).join('')}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: TENDERS PAGE
+// ═══════════════════════════════════════════════════════════
+function renderTendersPage() {
+  const el = document.getElementById('tenders-content');
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+      <div><div style="font-size:18px;font-weight:700">Tender Management</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:3px">Create and manage procurement tenders — data persisted in database</div></div>
+      <button class="btn btn-p" onclick="openModal('tender')">➕ New Tender</button>
+    </div>
+    ${!tenders.length?`<div class="card"><div class="empty"><div class="ei">📋</div><div style="font-size:15px;font-weight:600;margin-bottom:8px">No tenders yet</div>
+      <button class="btn btn-p" onclick="openModal('tender')">➕ Add First Tender</button></div></div>`:
+    tenders.map(t=>`
+      <div class="card">
+        <div class="ch">
+          <div>
+            <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:.04em">${t.ref}</div>
+            <div class="ct" style="margin-top:4px">${t.name}</div>
+            <div class="cs">${t.org} · ${t.proc_type}</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-s btn-sm" onclick="viewTender('${t.id}')">👁 View Details</button>
+            <button class="btn btn-d btn-sm" onclick="deleteTender('${t.id}')">🗑</button>
+          </div>
+        </div>
+        <div class="grid2">
+          <div><span class="fl">Estimated Value</span><div style="font-size:14px;font-weight:600;margin-top:4px">₹${t.value} Crore</div></div>
+          <div><span class="fl">Min. Turnover</span><div style="font-size:14px;font-weight:600;margin-top:4px">₹${t.min_turnover} Crore</div></div>
+          <div><span class="fl">Criteria Extracted</span><div style="font-size:14px;font-weight:600;margin-top:4px">${Array.isArray(t.criteria)?t.criteria.length:0} (${Array.isArray(t.criteria)?t.criteria.filter(c=>c.mandatory).length:0} mandatory)</div></div>
+          <div><span class="fl">Deadline</span><div style="font-size:14px;font-weight:600;margin-top:4px">${t.deadline||'Not set'}</div></div>
+        </div>
+        <div class="divider"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-p btn-sm" onclick="activeTId='${t.id}';openModal('bidder')">➕ Add Bidder</button>
+          <button class="btn btn-s btn-sm" onclick="activeTId='${t.id}';nav('evaluate')">⚙ Evaluate</button>
+          <span style="font-size:12px;color:var(--text2);margin-left:auto;padding:6px">${(bidders[t.id]||[]).length} bidder(s)</span>
+        </div>
+      </div>`).join('')}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: BIDDERS PAGE
+// ═══════════════════════════════════════════════════════════
+function renderBiddersPage() {
+  const el = document.getElementById('bidders-content');
+  const allBidders = Object.values(bidders).flat();
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+      <div><div style="font-size:18px;font-weight:700">Bidder Management</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:3px">All uploaded documents are stored and text-extracted automatically</div></div>
+      <button class="btn btn-p" onclick="openModal('bidder')">➕ Add Bidder</button>
+    </div>
+    ${!allBidders.length?`<div class="card"><div class="empty"><div class="ei">👤</div><div style="font-size:15px;font-weight:600;margin-bottom:8px">No bidders yet</div>
+      <button class="btn btn-p" onclick="openModal('bidder')">➕ Add First Bidder</button></div></div>`:
+    allBidders.map((b,i)=>{
+      const t=tenders.find(x=>x.id===b.tender_id);
+      let fps=[]; try{fps=JSON.parse(b.file_paths||'[]');}catch{}
+      return `<div class="card">
+        <div class="ch">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:44px;height:44px;border-radius:12px;background:${avColor(i)}22;color:${avColor(i)};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0">${initials(b.company)}</div>
+            <div>
+              <div class="ct">${b.company}</div>
+              <div class="cs">GSTIN: ${b.gstin} · ${b.state||'State N/A'}</div>
+            </div>
+          </div>
+          <button class="btn btn-d btn-sm" onclick="deleteBidder('${b.id}','${b.tender_id}')">🗑</button>
+        </div>
+        <div class="grid2">
+          <div><span class="fl">Tender</span><div style="font-size:12px;margin-top:4px;color:var(--accent)">${t?.ref||'—'}</div></div>
+          <div><span class="fl">GSTIN Valid</span><div style="font-size:12px;margin-top:4px;color:${b.gstn_valid?'var(--green)':'var(--red)'}">${b.gstn_valid?'✓ Valid format':'✗ Invalid format'}</div></div>
+          <div><span class="fl">Avg Turnover (3yr)</span><div style="font-size:12px;margin-top:4px">₹${(b.avg_turnover||0).toFixed(2)} Cr</div></div>
+          <div><span class="fl">Similar Projects</span><div style="font-size:12px;margin-top:4px">${b.projects||0}</div></div>
+        </div>
+        ${fps.length?`<div class="divider"></div><div style="font-size:11px;color:var(--text2);margin-bottom:6px">Uploaded Documents (${fps.length}):</div>
+          <div>${fps.map(f=>`<span class="chip chip-g">📎 ${typeof f==='object'?f.name:f}</span>`).join('')}</div>`:''}
+        <div class="divider"></div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px">Compliance Documents Listed:</div>
+        <div>${(b.docs_list||'').split(',').filter(d=>d.trim()).map(d=>`<span class="chip chip-g">✓ ${d.trim()}</span>`).join('')||'<span class="chip">None listed</span>'}</div>
+      </div>`;
+    }).join('')}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: EVALUATE PAGE
+// ═══════════════════════════════════════════════════════════
+function renderEvaluatePage() {
+  const el = document.getElementById('eval-content');
+  if(!tenders.length) {
+    el.innerHTML=`<div class="card"><div class="empty"><div class="ei">⚙</div><div>Add tenders and bidders first</div></div></div>`;
+    return;
+  }
+  el.innerHTML=`
+    <div style="font-size:18px;font-weight:700;margin-bottom:.25rem">Run Evaluation</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:1.5rem">AI evaluates each bidder against all extracted criteria. Results saved to database.</div>
+    ${tenders.map(t=>{
+      const bs = bidders[t.id]||[];
+      const ev = evals[t.id];
+      const sorted = ev ? [...ev].sort((a,b)=>{
+        const r={eligible:0,review_required:1,ineligible:2};
+        return (r[a.overall]||2)-(r[b.overall]||2)||b.confidence-a.confidence;
+      }) : [];
+      return `<div class="card">
+        <div class="ch">
+          <div><div class="ct">${t.name}</div>
+            <div class="cs">${t.ref} · ${bs.length} bidder(s) · Deadline: ${t.deadline||'N/A'}</div>
+          </div>
+          ${!bs.length?`<span class="badge b-rev">No bidders</span>`:
+            ev?`<span class="badge b-elig">✓ Evaluated</span>`:
+            `<button class="run-btn" id="run-btn-${t.id}" onclick="runEval('${t.id}')">▶ Run Evaluation</button>`}
+        </div>
+        ${!bs.length?`<div class="alert al-w">No bidders registered. <button class="btn btn-s btn-sm" style="margin-left:8px" onclick="activeTId='${t.id}';openModal('bidder')">Add Bidder</button></div>`:
+          !ev?`<div class="alert al-i">Ready to evaluate ${bs.length} bidder(s) against ${Array.isArray(t.criteria)?t.criteria.length:0} criteria (${Array.isArray(t.criteria)?t.criteria.filter(c=>c.mandatory).length:0} mandatory).</div>`:''}
+        ${ev?`
+          <div class="divider"></div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:1rem">Results — ${sorted.filter(r=>r.overall==='eligible').length} eligible of ${sorted.length}</div>
+          ${sorted.map((r,i)=>renderBidderResult(r,i,t.id)).join('')}
+        `:''}
+      </div>`;
+    }).join('')}`;
+}
+
+function renderBidderResult(r, i, tid) {
+  const key = `${tid}-${r.bidder_id}`;
+  const exp = expandedCr.has(key);
+  return `<div class="card" style="background:var(--surface2);margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:12px;cursor:pointer" onclick="toggleBidder('${tid}','${r.bidder_id}')">
+      <div style="width:38px;height:38px;border-radius:50%;background:${avColor(i)}22;color:${avColor(i)};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">${initials(r.company)}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">${r.company}</div>
+        <div style="font-size:11px;color:var(--text2)">${r.mand_pass}/${r.mand_total} mandatory · ${(r.opt_score||0).toFixed(0)}% optional · Conf: ${(r.confidence*100).toFixed(0)}%</div>
+      </div>
+      ${badge(r.overall)}
+      <div style="font-size:18px;color:var(--text3)">${exp?'▲':'▼'}</div>
+    </div>
+    ${exp?`
+      <div class="divider"></div>
+      ${(r.results||[]).map((cr,j)=>{
+        const ckey=`${tid}-${r.bidder_id}-${j}`;
+        const cexp=expandedCr.has(ckey);
+        return `<div class="cr-row ${cexp?'exp':''}" onclick="toggleCr('${ckey}')">
+          <div class="cr-hdr">
+            <div class="cr-icon" style="background:${statusIconBg(cr.status)};color:${statusIconColor(cr.status)}">${statusIcon(cr.status)}</div>
+            <div class="cr-title">${cr.id}: ${cr.desc}</div>
+            <span class="cr-cat ${catClass(cr.cat)}">${cr.cat}</span>
+            ${badge(cr.status)}
+          </div>
+          <div class="cr-body ${cexp?'show':''}">
+            <div class="dg">
+              <div class="di"><label>Required</label><div class="v">${cr.required_val||cr.required||'—'}</div></div>
+              <div class="di"><label>Bidder Submitted</label><div class="v">${cr.bidder_val||cr.bidder||'—'}</div></div>
+              <div class="di"><label>Evidence Source</label><div class="v">${cr.src||cr.source||'—'}</div></div>
+              <div class="di"><label>AI Confidence</label><div class="v" style="color:${confColor(cr.conf||cr.confidence||0)}">${((cr.conf||cr.confidence||0)*100).toFixed(0)}%</div>
+                <div class="cbar"><div class="cbar-f" style="width:${((cr.conf||cr.confidence||0)*100).toFixed(0)}%;background:${confColor(cr.conf||cr.confidence||0)}"></div></div>
+              </div>
+            </div>
+            <div class="rbox">
+              <div style="font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px">AI Reasoning</div>
+              ${cr.reason||'No reasoning available'}
+              ${cr.review?'<br><strong style="color:var(--amber)">⚑ REVIEW FLAG: Human verification recommended.</strong>':''}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+      <div class="divider"></div>
+      <div style="background:${r.overall==='eligible'?'var(--green-bg)':r.overall==='ineligible'?'var(--red-bg)':'var(--amber-bg)'};border:1px solid ${r.overall==='eligible'?'var(--green-bd)':r.overall==='ineligible'?'var(--red-bd)':'var(--amber-bd)'};border-radius:var(--rsm);padding:12px 14px">
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px">⚖ Recommended Action</div>
+        <div style="font-size:12px;color:var(--text2)">
+          ${r.overall==='eligible'
+            ?'<strong style="color:var(--green)">PROCEED TO FINANCIAL BID OPENING.</strong> Retain AI evaluation report per CVC audit requirements.'
+            :r.overall==='ineligible'
+            ?`<strong style="color:var(--red)">REJECT TECHNICAL BID.</strong> Do not open financial envelope. Issue rejection notice citing failed criteria.`
+            :'<strong style="color:var(--amber)">HOLD FOR EXPERT REVIEW.</strong> Assign to senior procurement officer.'}
+        </div>
+      </div>
+    `:''}
+  </div>`;
+}
+
+function toggleBidder(tid, bid) {
+  const key=`${tid}-${bid}`;
+  if(expandedCr.has(key)) expandedCr.delete(key);
+  else expandedCr.add(key);
+  renderEvaluatePage();
+}
+
+function toggleCr(key) {
+  if(expandedCr.has(key)) expandedCr.delete(key);
+  else expandedCr.add(key);
+  renderEvaluatePage();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: REPORTS PAGE
+// ═══════════════════════════════════════════════════════════
+function renderReportsPage() {
+  const el = document.getElementById('reports-content');
+  const evTenders = tenders.filter(t=>evals[t.id]);
+  if(!evTenders.length) {
+    el.innerHTML=`<div class="card"><div class="empty"><div class="ei">📄</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px">No evaluations yet</div>
+      <button class="btn btn-p" onclick="nav('evaluate')">⚙ Run Evaluation</button>
+    </div></div>`; return;
+  }
+  el.innerHTML=`
+    <div style="font-size:18px;font-weight:700;margin-bottom:.25rem">Evaluation Reports</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:1.5rem">Download professional DOCX reports with per-bidder detail and officer sign-off page</div>
+    ${evTenders.map(t=>{
+      const ev=evals[t.id]||[];
+      const elig=ev.filter(r=>r.overall==='eligible').length;
+      return `<div class="card">
+        <div class="ch">
+          <div><div class="ct">${t.name}</div>
+            <div class="cs">${t.ref} · Evaluated: ${ev[0]?.evaluated_at?new Date(ev[0].evaluated_at).toLocaleString():''}</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-s btn-sm" onclick="nav('evaluate')">👁 View Details</button>
+            <button class="btn btn-g" id="report-btn-${t.id}" onclick="downloadReport('${t.id}')">📄 Download DOCX Report</button>
+          </div>
+        </div>
+        <div class="sg" style="margin-bottom:0">
+          <div class="sc"><div class="sc-l">Total Bidders</div><div class="sc-v" style="font-size:20px;color:var(--text)">${ev.length}</div></div>
+          <div class="sc"><div class="sc-l">Eligible</div><div class="sc-v" style="font-size:20px;color:var(--green)">${elig}</div></div>
+          <div class="sc"><div class="sc-l">Ineligible</div><div class="sc-v" style="font-size:20px;color:var(--red)">${ev.filter(r=>r.overall==='ineligible').length}</div></div>
+          <div class="sc"><div class="sc-l">Review</div><div class="sc-v" style="font-size:20px;color:var(--amber)">${ev.filter(r=>r.has_review).length}</div></div>
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: AUDIT PAGE
+// ═══════════════════════════════════════════════════════════
+async function renderAuditPage() {
+  const el = document.getElementById('audit-content');
+  el.innerHTML='<div style="font-size:14px;color:var(--text2)"><span class="spinner"></span> Loading audit log...</div>';
+  try {
+    const logs = await api('GET','/api/audit?limit=100');
+    const verify = await api('GET','/api/audit/verify');
+    el.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+        <div><div style="font-size:18px;font-weight:700">Audit Log</div>
+          <div style="font-size:12px;color:var(--text2)">SHA-256 chained, tamper-evident — CVC compliant</div></div>
+        <span class="badge ${verify.valid?'b-elig':'b-inelig'}">${verify.valid?'✓ Chain Intact':'✗ Chain Issue'}</span>
+      </div>
+      <div class="alert ${verify.valid?'al-s':'al-e'}" style="margin-bottom:1rem">
+        ${verify.message} · ${verify.total_events} events verified
+      </div>
+      ${!logs.length?'<div class="notice">No audit events yet</div>':
+        `<div class="audit-tl">${logs.map(l=>`
+          <div class="ae ${l.status}">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div class="ae-type">${l.event_type}${l.bidder_id?` · ${l.bidder_id}`:''}</div>
+              <span style="font-size:10px;color:var(--text3)">${new Date(l.created_at).toLocaleString()} · ${l.actor}</span>
+            </div>
+            <div class="ae-desc">${l.description}</div>
+            <div class="ae-hash">Hash: ${l.event_hash} ← prev: ${l.prev_hash}</div>
+          </div>`).join('')}
+        </div>`}`;
+  } catch(e) {
+    el.innerHTML=`<div class="alert al-e">Could not load audit log: ${e.message}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// DEMO DATA LOADER
+// ═══════════════════════════════════════════════════════════
+async function loadDemo() {
+  showToast('Loading demo data...','info');
+  const today = new Date();
+  const deadline = new Date(today);
+  deadline.setDate(today.getDate() + 30);
+  const deadlineStr = deadline.toISOString().slice(0,10);
+
+  try {
+    // Create tender
+    const fd = new FormData();
+    fd.append('ref','CRPF/PROV/OTE/2026/537');
+    fd.append('name','Supply of Fusion Monoculars (Thermal + NVG)');
+    fd.append('org','CRPF / Ministry of Home Affairs');
+    fd.append('value',8);
+    fd.append('min_turnover',5);
+    fd.append('min_projects',3);
+    fd.append('emd',200000);
+    fd.append('proc_type','Open Tender Enquiry (OTE)');
+    fd.append('deadline', deadlineStr);
+    fd.append('description',`Section 4: ELIGIBILITY CRITERIA\n4.1 The bidder must have a minimum annual turnover of Rs. 5 Crore in each of the last 3 financial years. EMD of Rs. 2,00,000 must be submitted failing which the offer will be summarily rejected. Net worth shall be positive.\n4.2 At least 3 similar works within last 7 financial years.\n4.3 Valid GSTIN registration certificate must be submitted. PAN card copy is required. ISO 9001:2015 certification is desirable. NSIC registered firms are exempted from EMD.\n4.4 The bidder shall not be under liquidation. Integrity Pact is mandatory.`);
+
+    const t = await api('POST','/api/tenders',fd,true);
+    tenders.unshift(t); bidders[t.id]=[]; activeTId=t.id;
+
+    // Add bidders
+    const demoB = [
+      {company:'Techvision Defence Systems Pvt. Ltd.',gstin:'27AABCT3518Q1ZO',pan:'AABCT3518Q',cin:'U74999MH2010PTC203456',state:'Maharashtra',net_worth:12,t1:6.5,t2:7.2,t3:8.1,projects:3,
+       exp:'Project 1: Supply of Night Vision Devices to Indian Army, Rs. 2.5 Crore, completed 15-Mar-2022. Project 2: Thermal Imaging Systems to BSF, Rs. 3.1 Crore, completed 20-Jun-2023. Project 3: Fusion Monoculars to ITBP, Rs. 1.8 Crore, completed 10-Nov-2021.',
+       docs:'GSTIN Certificate, PAN Card, ISO 9001:2015, NSIC Registration, Integrity Pact, Non-Blacklisting Declaration, Liquidation Declaration'},
+      {company:'Bharat Optics & Security Ltd.',gstin:'07AABCB4421R1Z3',pan:'AABCB4421R',cin:'',state:'Delhi',net_worth:8,t1:4.8,t2:5.2,t3:5.9,projects:2,
+       exp:'Project 1: Security Cameras Delhi Police, Rs. 2 Crore, Aug 2022. Project 2: Optical systems CRPF, Rs. 1.5 Crore, Mar 2021.',
+       docs:'GSTIN Certificate, PAN Card, MSME Certificate, Integrity Pact, Non-Blacklisting Declaration'},
+      {company:'Global Defence Innovations',gstin:'INVALID_GST_123',pan:'ABCDE1234F',cin:'',state:'',net_worth:null,t1:2.8,t2:3.1,t3:3.5,projects:1,
+       exp:'Single project: binoculars to UP Police, Rs. 80 Lakhs, 2023.',
+       docs:'PAN Card'},
+    ];
+
+    for(const bd of demoB) {
+      const bfd = new FormData();
+      bfd.append('company',  bd.company);
+      bfd.append('gstin',    bd.gstin);
+      bfd.append('pan',      bd.pan);
+      bfd.append('cin',      bd.cin);
+      bfd.append('state',    bd.state);
+      bfd.append('net_worth',bd.net_worth||'');
+      bfd.append('t_21_22',  bd.t1);
+      bfd.append('t_22_23',  bd.t2);
+      bfd.append('t_23_24',  bd.t3);
+      bfd.append('projects', bd.projects);
+      bfd.append('exp_text', bd.exp);
+      bfd.append('docs_list',bd.docs);
+      const b = await api('POST',`/api/tenders/${t.id}/bidders`,bfd,true);
+      bidders[t.id].push(b);
+    }
+
+    renderSidebar(); renderDashboard();
+    showToast('🎯 Demo data loaded! Go to Evaluate tab to run evaluation.');
+  } catch(e) {
+    showToast('Demo error: '+e.message,'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════
+function showToast(msg, type='success') {
+  const colors={success:'var(--green-bg)',error:'var(--red-bg)',warn:'var(--amber-bg)',info:'var(--blue-bg)'};
+  const t=document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border2);padding:12px 18px;border-radius:var(--r);font-size:13px;font-weight:500;z-index:1000;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:toastIn .2s ease;border-left:4px solid ${type==='success'?'var(--green)':type==='error'?'var(--red)':type==='warn'?'var(--amber)':'var(--accent)'}`;
+  t.textContent=msg;
+  if(!document.getElementById('toast-css')){
+    const s=document.createElement('style');
+    s.id='toast-css';
+    s.textContent='@keyframes toastIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}';
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},4000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+checkAPI();
+loadAll();
+// Re-check API every 30s
+setInterval(checkAPI, 30000);
+</script>
+</body>
+</html>
